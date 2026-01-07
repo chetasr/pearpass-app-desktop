@@ -144,9 +144,19 @@ module.exports = html`
       background-color: #b1cb58;
     }
 
-    button,
+    /* Accessibility: provide visible focus indicator for keyboard navigation */
     button:focus {
+      outline: 2px solid var(--color-blue-400);
+      outline-offset: 2px;
+    }
+
+    button:focus:not(:focus-visible) {
       outline: none;
+    }
+
+    button:focus-visible {
+      outline: 2px solid var(--color-blue-400);
+      outline-offset: 2px;
     }
 
     button.secondary {
@@ -291,14 +301,22 @@ module.exports = html`
       <button id="installBtn">Install PearPass</button>
 
       <div id="status" class="status hidden">
-        <div id="progress" class="progress"><div></div></div>
+        <div
+          id="progress"
+          class="progress"
+          role="progressbar"
+          aria-valuenow="0"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-label="Installation progress"
+        ><div></div></div>
         <div id="statusLine" class="status-line">
-          <p id="warning" class="message"></p>
-          <p id="stats" class="stats"></p>
+          <p id="warning" class="message" role="status" aria-live="polite"></p>
+          <p id="stats" class="stats" aria-label="Download statistics"></p>
         </div>
         <div id="buttonGroup" class="button-group hidden">
-          <button id="quitBtn" class="secondary">Quit</button>
-          <button id="retryBtn">Retry installation</button>
+          <button id="quitBtn" class="secondary" aria-label="Quit installation">Quit</button>
+          <button id="retryBtn" aria-label="Retry installation">Retry installation</button>
         </div>
         <button
           id="launchBtn"
@@ -378,6 +396,9 @@ module.exports = html`
         elements.progress.classList.remove("indeterminate");
         elements.progress.classList.add("determinate");
         const progressBar = elements.progress.querySelector("div");
+
+        // Update ARIA attributes for accessibility
+        elements.progress.setAttribute("aria-valuenow", Math.round(progress));
 
         // Enable transitions after first frame
         if (progress > 0) {

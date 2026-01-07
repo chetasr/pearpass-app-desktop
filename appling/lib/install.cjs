@@ -12,23 +12,23 @@ async function install(id, opts = {}) {
   const { platform = "pzcjqmpoo6szkoc4bpkw65ib9ctnrq7b6mneeinbhbheihaq6p6o" } =
     opts;
 
-  console.log("[install] called with id:", id, "opts:", opts);
+  // Preflight check - determines if installation is needed
+  const preflightResult = await preflight(id);
 
-  using lock = await preflight(id);
-  console.log(
-    "[install] preflight lock acquired for id:",
-    id,
-    "lock.dir:",
-    lock.dir,
-  );
+  // If app was already installed and launched, exit immediately
+  if (preflightResult.launched) {
+    Bare.exit();
+    return;
+  }
+
+  // Use the lock with explicit resource management
+  using lock = preflightResult.lock;
 
   const config = {
     dir: lock.dir,
     platform,
     link: `pear://${id}`,
   };
-
-  console.log("[install] config prepared:", config);
 
   const app = App.shared();
 
@@ -37,63 +37,52 @@ async function install(id, opts = {}) {
 
   function onViewMessage(message) {
     const msg = message.toString();
-    console.log("[onViewMessage] Received message:", msg);
     switch (msg) {
       case "quit":
-        console.log("[onViewMessage] Handling quit");
         window.close();
         break;
       case "install":
-        console.log("[onViewMessage] Handling install");
         app.broadcast(encode({ type: "install" }));
         break;
       case "launch": {
-        console.log("[onViewMessage] Handling launch");
         lock.unlock();
         const appInstance = new appling.App(id);
-        console.log("[onViewMessage] Created appling.App instance and opening");
         appInstance.open();
         window.close();
         break;
       }
-      default:
-        console.log("[onViewMessage] Unknown message:", msg);
     }
   }
 
   function onWorkerMessage(message) {
     const msg = decode(message);
-    console.log("[onWorkerMessage] Received message:", msg);
+    if (!msg) return;
+
     switch (msg.type) {
       case "ready":
-        console.log("[onWorkerMessage] Worker is ready. Broadcasting config.");
         app.broadcast(encode({ type: "config", data: config }));
         break;
       case "download":
-        console.log("[onWorkerMessage] Download progress:", msg.data);
         view.postMessage({ type: "progress", data: msg.data });
         break;
       case "complete":
-        console.log("[onWorkerMessage] Installation complete.");
         view.postMessage({ type: "state", state: "complete" });
         break;
       case "error":
-        console.log("[onWorkerMessage] Error occurred:", msg);
+        console.error("[install] Worker error:", msg.error);
         view.postMessage({ type: "state", state: "error" });
         break;
-      default:
-        console.log("[onWorkerMessage] Unknown message type:", msg.type);
     }
   }
 
+  // Track worker thread for cleanup
+  let workerThread;
+
   app
     .on("launch", () => {
-      console.log("[app.launch] Launch event triggered.");
-      new Thread(require.resolve("./worker"));
-      console.log("[app.launch] Worker thread started.");
+      workerThread = new Thread(require.resolve("./worker"));
 
       const { width, height } = Screen.main().getBounds();
-      console.log("[app.launch] Screen bounds:", { width, height });
 
       window = new Window(
         (width - WINDOW_WIDTH) / 2,
@@ -102,21 +91,24 @@ async function install(id, opts = {}) {
         WINDOW_HEIGHT,
         { frame: false },
       );
-      console.log("[app.launch] Window created.");
 
       view = new WebView(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
       view.on("message", onViewMessage).loadHTML(html);
-      console.log("[app.launch] WebView created and HTML loaded.");
 
       window.appendChild(view);
       window.show();
-      console.log("[app.launch] Window shown.");
     })
     .on("terminate", () => {
-      console.log("[app.terminate] Terminate event triggered.");
+      // Terminate worker thread if it exists
+      if (workerThread) {
+        try {
+          workerThread.terminate();
+        } catch (err) {
+          // Ignore termination errors
+        }
+      }
       if (window) {
         window.destroy();
-        console.log("[app.terminate] Window destroyed.");
       }
     })
     .on("message", onWorkerMessage)

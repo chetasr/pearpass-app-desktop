@@ -3,6 +3,9 @@
   "name": "PearPass",
   "version": "1.0.0",
   "description": "Pear Appling for PearPass",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "exports": {
     "./package": "./package.json"
   },

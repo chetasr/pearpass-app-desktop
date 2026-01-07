@@ -1,48 +1,39 @@
 const appling = require("appling-native");
 
-async function preflight(id, dir) {
-  console.log("[preflight] called with id:", id, "dir:", dir);
-
-  const lock = await appling.lock(dir);
-  console.log("[preflight] lock acquired for dir:", dir);
+/**
+ * Performs pre-installation checks to determine if the app is already installed.
+ *
+ * @param {string} id - The Pear application ID (z32 encoded public key)
+ * @returns {Promise<{lock: object, needsInstall: boolean, launched: boolean}>}
+ *   - lock: The installation lock (null if app was launched)
+ *   - needsInstall: true if installation is required
+ *   - launched: true if the app was already installed and has been launched
+ */
+async function preflight(id) {
+  // Acquire lock without specifying dir - appling-native uses default location
+  const lock = await appling.lock();
 
   let platform;
   try {
-    platform = await appling.resolve(dir);
-    console.log("[preflight] resolved platform for dir:", dir);
+    platform = await appling.resolve();
   } catch (err) {
-    console.log(
-      "[preflight] failed to resolve platform for dir:",
-      dir,
-      "Error:",
-      err,
-    );
-    return lock;
+    // Platform not found - installation required
+    return { lock, needsInstall: true, launched: false };
   }
 
   const ready = platform.ready(`pear://${id}`);
-  console.log(
-    "[preflight] platform.ready for pear://",
-    id,
-    ":",
-    ready,
-    "dir:",
-    platform.path,
-  );
 
   if (ready === false) {
-    console.log("[preflight] platform not ready for launch, returning lock.");
-    return lock;
+    return { lock, needsInstall: true, launched: false };
   }
 
-  console.log("[preflight] unlocking lock for dir:", dir);
+  // App is already installed and ready - launch it directly
   await lock.unlock();
-
-  console.log("[preflight] launching platform with id:", id);
   platform.launch(id);
 
-  console.log("[preflight] exiting Bare process");
-  Bare.exit();
+  // Return sentinel value indicating app was launched
+  // Caller should exit the process after receiving this
+  return { lock: null, needsInstall: false, launched: true };
 }
 
 module.exports = { preflight };

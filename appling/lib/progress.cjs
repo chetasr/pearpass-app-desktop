@@ -1,16 +1,35 @@
 const prettyBytes = require("prettier-bytes");
 const { encode } = require("./utils");
 
+/**
+ * Multi-stage progress tracker with weighted percentages.
+ * Broadcasts progress updates via the app's IPC mechanism.
+ */
 class Progress {
+  /**
+   * Creates a new Progress tracker.
+   * @param {object} app - The fx-native App instance for broadcasting
+   * @param {number[]} stages - Array of stage weights (should sum to 1.0)
+   * @example new Progress(app, [0.3, 0.7]) // 30% for stage 0, 70% for stage 1
+   */
   constructor(app, stages = [1]) {
     this.app = app;
-    this.stages = stages; // e.g. [0.5, 0.3, 0.2]
+    this.stages = stages;
     this.values = Array(stages.length).fill(0);
     this.speed = "";
     this.peers = 0;
     this.total = 0;
     this.currentStage = 0;
     this.stageBytes = Array(stages.length).fill(0);
+
+    // Validate that stage weights sum to approximately 1.0
+    const sum = stages.reduce((a, b) => a + b, 0);
+    if (Math.abs(sum - 1) > 0.001) {
+      console.warn(
+        `[Progress] Stage weights sum to ${sum.toFixed(3)}, expected 1.0. ` +
+          `Progress percentage may not reach 100%.`
+      );
+    }
   }
 
   _broadcast() {
