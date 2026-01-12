@@ -2,24 +2,10 @@ const AUTO_LAUNCH = true;
 const SLOW_TIMEOUT = 180000; // 3 minutes
 
 // Simple inline SVG for splash - can be replaced with actual PearPass logo
-const splashSvg = ``;
+const splashSvg = require('./images/logo.svg', { with: { type: 'text' } });
 
 // Pear logo SVG
-const pearSvg = `<svg width="17" height="22" viewBox="0 0 17 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M7.61644 0H8.7882V2.1725H7.61644V0Z" fill="#B0D944" />
-  <path d="M7.03056 2.86V3.3H5.8588V3.85H10.5458V3.3H9.37408V2.4475H8.20232V2.86H7.03056Z" fill="#B0D944" />
-  <path d="M11.7176 4.125H8.20232V4.5375H4.68704V5.5275H11.7176V4.125Z" fill="#B0D944" />
-  <path d="M12.8894 5.8025H8.20232V6.215H3.51528V7.205H12.8894V5.8025Z" fill="#B0D944" />
-  <path d="M12.8894 7.48H8.20232V7.8925H3.51528V8.8825H12.8894V7.48Z" fill="#B0D944" />
-  <path d="M14.0611 9.1575H8.20232V9.57H2.34352V10.56H14.0611V9.1575Z" fill="#B0D944" />
-  <path d="M14.0611 10.835H8.20232V11.2475H2.34352V12.2375H14.0611V10.835Z" fill="#B0D944" />
-  <path d="M15.2329 12.5125H8.20232V12.925H1.17176V13.915H15.2329V12.5125Z" fill="#B0D944" />
-  <path d="M16.4046 14.19H8.20232V14.6025H0V15.5925H16.4046V14.19Z" fill="#B0D944" />
-  <path d="M16.4046 15.8675H8.20232V16.28H0V17.27H16.4046V15.8675Z" fill="#B0D944" />
-  <path d="M16.4046 17.545H8.20232V17.9575H0V18.9475H16.4046V17.545Z" fill="#B0D944" />
-  <path d="M14.0611 19.2225H8.20232V19.635H2.34352V20.625H14.0611V19.2225Z" fill="#B0D944" />
-  <path d="M11.7176 20.9H8.20232V21.3125H4.68704V22H11.7176V20.9Z" fill="#B0D944" />
-</svg>`;
+const pearSvg = require('./images/pear.svg', { with: { type: 'text' } });
 
 const html = String.raw;
 
@@ -50,15 +36,33 @@ module.exports = html`
       overflow: hidden;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
-      background-color: red;
+      background-color: #121212;
     }
 
     body {
       margin: 0;
-      background: var(--color-gradient-background);
+      background: #121212;
       color: var(--color-white);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
         Oxygen, Ubuntu, Cantarell, sans-serif;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Blurred ellipse background effect */
+    body::before {
+      content: '';
+      position: absolute;
+      top: -34vh;
+      left: 3.2%;
+      width: 93.6vw;
+      height: 52.6vh;
+      background: #B0D944;
+      border-radius: 50%;
+      filter: blur(150px);
+      opacity: 0.3;
+      z-index: 0;
+      pointer-events: none;
     }
 
     img {
@@ -92,6 +96,8 @@ module.exports = html`
       justify-content: center;
       padding: 0 3.8rem;
       height: 100vh;
+      position: relative;
+      z-index: 1;
     }
 
     header {
@@ -99,6 +105,12 @@ module.exports = html`
       align-items: center;
       flex-direction: column;
       text-align: center;
+      margin-bottom: 5.377rem;
+    }
+
+    header svg {
+      width: 215px;
+      height: 45.2px;
     }
 
     article {
@@ -116,6 +128,12 @@ module.exports = html`
       display: flex;
       align-items: center;
       flex-direction: column;
+    }
+
+    footer svg {
+      width: 35px;
+      height: 47.175px;
+      aspect-ratio: 35.00 / 47.17;
     }
 
     button {
