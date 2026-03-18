@@ -184,11 +184,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-      - name: Configure npm to use bash shell
-        run: npm config set script-shell "C:\\Program Files\\Git\\bin\\bash.exe"
-        shell: bash
       - uses: holepunchto/make-pear-app@main
         id: build
+        env:
+          npm_config_script_shell: "C:\\Program Files\\Git\\bin\\bash.exe"
         with:
           channel: "stable"
           windows_subject: ${{ secrets.WIN_SUBJECT }}
