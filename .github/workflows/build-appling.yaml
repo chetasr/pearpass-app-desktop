@@ -179,6 +179,8 @@ jobs:
     permissions:
       contents: write # to upload artifacts
     runs-on: self-hosted # self-hosted signer
+    env:
+      HUSKY: 0
     outputs:
       artifact-links: ${{ steps.build.outputs.artifact-links }}
     steps:
