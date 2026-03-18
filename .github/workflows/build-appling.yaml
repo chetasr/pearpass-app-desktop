@@ -186,7 +186,7 @@ jobs:
       - uses: actions/setup-node@v4
       - name: Configure npm to use bash shell
         run: npm config set script-shell "C:\\Program Files\\Git\\bin\\bash.exe"
-        shell: pwsh
+        shell: bash
       - uses: holepunchto/make-pear-app@main
         id: build
         with:
