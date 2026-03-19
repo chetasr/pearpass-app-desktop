@@ -201,7 +201,7 @@ jobs:
           WIN_THUMBPRINT: ${{ secrets.WIN_THUMBPRINT }}
           GH_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
-          npm run dist:win
+          npm run make
 
       - name: "Install @actions/artifact module"
         id: install-actions-artifact-module
