@@ -9,14 +9,15 @@ import {
 import {
   KeyboardArrowRightRound
 } from '@tetherto/pearpass-lib-ui-kit/icons'
-import { useUserData, useVault, useVaults } from 'pearpass-lib-vault'
-import { clearBuffer, stringToBuffer } from 'pearpass-lib-vault/src/utils/buffer'
+import { useCreateVault, useUserData, useVault, useVaults } from '@tetherto/pearpass-lib-vault'
+import { clearBuffer, stringToBuffer } from '@tetherto/pearpass-lib-vault/src/utils/buffer'
 
 import { OnboardingShell } from '../../../components/OnboardingShell'
 import { NAVIGATION_ROUTES } from '../../../constants/navigation'
 import { useGlobalLoading } from '../../../context/LoadingContext'
 import { useRouter } from '../../../context/RouterContext'
 import { useTranslation } from '../../../hooks/useTranslation'
+import { getDeviceName } from '../../../utils/getDeviceName'
 import { logger } from '../../../utils/logger'
 import { sortByName } from '../../../utils/sortByName'
 import {
@@ -31,7 +32,8 @@ export const CardUnlockPearPassV2 = (): React.ReactElement => {
   const { theme } = useTheme()
   const { currentPage, navigate } = useRouter()
   const { initVaults, refetch: refetchVaults } = useVaults()
-  const { isVaultProtected, refetch: refetchVault } = useVault()
+  const { isVaultProtected, addDevice, refetch: refetchVault } = useVault()
+  const { createVault } = useCreateVault()
   const { logIn, refreshMasterPasswordStatus } = useUserData()
 
   const [password, setPassword] = useState('')
@@ -82,7 +84,9 @@ export const CardUnlockPearPassV2 = (): React.ReactElement => {
           navigate('vault', { recordType: 'all' })
         }
       } else {
-        navigate(currentPage, { state: 'vaults' })
+        await createVault({ name: t('Personal') })
+        await addDevice(getDeviceName())
+        navigate('vault', { recordType: 'all' })
       }
     } catch (submitError) {
       const status = await refreshMasterPasswordStatus()
